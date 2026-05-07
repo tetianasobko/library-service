@@ -1,6 +1,7 @@
 import datetime
 
 from django.db import transaction
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -29,6 +30,10 @@ class BorrowingViewSet(
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @extend_schema(
+        request=None,
+        description="Marks the borrowing as returned.",
+    )
     @action(detail=True, methods=["post"], url_path="return")
     @transaction.atomic
     def return_borrowing(self, request, pk=None):
