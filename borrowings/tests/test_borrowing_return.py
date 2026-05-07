@@ -105,3 +105,19 @@ class BorrowingReturnTests(TestCase):
         res = self.client.post(return_url(borrowing.id))
 
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_admin_can_return_any_borrowing(self):
+        admin = get_user_model().objects.create_user(
+            email="admin@example.com", password="testpass123", is_staff=True
+        )
+        book = sample_book(inventory=1)
+        borrowing = sample_borrowing(self.user, book)
+        self.client.force_authenticate(user=admin)
+
+        res = self.client.post(return_url(borrowing.id))
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        borrowing.refresh_from_db()
+        self.assertEqual(borrowing.actual_return_date, datetime.date.today())
+        book.refresh_from_db()
+        self.assertEqual(book.inventory, 2)
