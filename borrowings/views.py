@@ -20,7 +20,10 @@ class BorrowingViewSet(
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return Borrowing.objects.filter(user=self.request.user).select_related("book", "user")
+        queryset = Borrowing.objects.select_related("book", "user")
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(user=self.request.user)
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "create":
