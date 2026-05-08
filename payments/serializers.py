@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from borrowings.models import Borrowing
 from payments.models import Payment
 
 
@@ -17,3 +16,11 @@ class PaymentSerializer(serializers.ModelSerializer):
             "session_id",
         )
         read_only_fields = ("status", "money_to_pay", "session_url", "session_id")
+
+    def validate_borrowing(self, borrowing):
+        request = self.context["request"]
+        if not request.user.is_staff and borrowing.user != request.user:
+            raise serializers.ValidationError(
+                "You can only create payments for your own borrowings."
+            )
+        return borrowing
