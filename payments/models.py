@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 
@@ -22,16 +24,15 @@ class Payment(models.Model):
     money_to_pay = models.DecimalField(max_digits=6, decimal_places=2)
 
     def calculate_money_to_pay(self):
+        daily_fee = Decimal(str(self.borrowing.book.daily_fee))
         if self.type == self.Type.PAYMENT:
-            return self.borrowing.book.daily_fee * (
-                (self.borrowing.expected_return_date - self.borrowing.borrow_date).days
-            )
+            return daily_fee * (self.borrowing.expected_return_date - self.borrowing.borrow_date).days
         elif self.type == self.Type.FINE:
             if self.borrowing.actual_return_date and self.borrowing.actual_return_date > self.borrowing.expected_return_date:
-                return self.borrowing.book.daily_fee * self.FINE_MULTIPLIER * (
+                return daily_fee * self.FINE_MULTIPLIER * (
                     (self.borrowing.actual_return_date - self.borrowing.expected_return_date).days
                 )
-        return 0
+        return Decimal(0)
 
     def save(self, *args, **kwargs):
         if self.pk is None:
