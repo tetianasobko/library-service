@@ -181,3 +181,15 @@ class PaymentCreateTests(TestCase):
 
         payment = Payment.objects.first()
         self.assertEqual(payment.status, Payment.Status.PENDING)
+
+    def test_cannot_create_payment_for_another_users_borrowing(self):
+        other_user = get_user_model().objects.create_user(
+            email="other@example.com", password="testpass123"
+        )
+        other_borrowing = sample_borrowing(other_user)
+        payload = {"borrowing": other_borrowing.id, "type": Payment.Type.PAYMENT}
+
+        res = self.client.post(PAYMENTS_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Payment.objects.count(), 0)
